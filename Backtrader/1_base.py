@@ -5,13 +5,12 @@ import pandas as pd
 
 #0.1 add indicator
 class Joyo_ind(bt.Indicator):
-    lines=('up','down')
+    print("def indicator")
 
 #0.2 add strategy
 class Joyo_str(bt.Strategy):
     def __init__(self):
-        self.data1.plotinfo.plot=False
-            def __init__(self):
+        print("init")
 
     def start(self):
         print("start")
