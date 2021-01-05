@@ -11,7 +11,6 @@ class Joyo_ind(bt.Indicator):
 class Joyo_str(bt.Strategy):
     def __init__(self):
         self.data1.plotinfo.plot=False
-            def __init__(self):
 
     def start(self):
         print("start")
