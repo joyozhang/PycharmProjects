@@ -52,11 +52,6 @@ class DualThrust(bt.Strategy):
             self.order=self.sell(size=10)
         if self.data.datetime.time() >= datetime.time(22,55):
             self.order = self.close()
-    def stop(self):
-        print('period: %s, k_u: %s, k_d: %s, final_value: %.2f' %
-              (self.params.period, self.params.k_u, self.params.k_d, self.broker.getvalue()))
-#        print('period: %s, k_u: k_d:, final_value: %.2f' %
-#              (self.params.period, self.broker.getvalue()))
 
 def main():
     #1.Create a cerebro
@@ -64,7 +59,7 @@ def main():
 
     #2.Add data feed
     #2.1 Creat a data feed
-    dataframe = pd.read_csv('C:\\FXDATA\\data\\USDJPY_es.csv',names=['datetime','open','high','low','close','Aopen','Ahigh','Alow','Aclose'])
+    dataframe = pd.read_csv('C:\\FXDATA\\data\\USDJPY_oo.csv',names=['datetime','open','high','low','close','Aopen','Ahigh','Alow','Aclose'])
     dataframe=dataframe.drop(['Aopen','Ahigh','Alow','Aclose'],axis=1)
     dataframe['datetime']=pd.to_datetime(dataframe['datetime'])
     dataframe.set_index('datetime',inplace=True)
@@ -81,17 +76,14 @@ def main():
     cerebro.resampledata(brf_min,timeframe=bt.TimeFrame.Days)
 
     #3. Add strategy
-    cerebro.optstrategy(
-        DualThrust,
-        period=range(1,5),
-        k_u=[n/10.0 for n in range(2,10)],
-        k_d=[n/10.0 for n in range(2,10)])
+    cerebro.addstrategy(DualThrust)
 
     #4. Run
     cerebro.run()
 
     #5. Plot
-    #cerebro.plot(style='candle')
+    cerebro.plot(style='candle')
 
 if __name__ == '__main__':
     main()
+
