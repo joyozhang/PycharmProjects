@@ -3,6 +3,9 @@ import backtrader as bt
 import datetime
 import pandas as pd
 
+start_w=500
+nrow_w=1
+
 #0.1 add indicator
 class DT_Line(bt.Indicator):
     lines=('U','D')
@@ -53,14 +56,15 @@ class DualThrust(bt.Strategy):
         if self.data.datetime.time() >= datetime.time(22,55):
             self.order = self.close()
 
-def main():
+if __name__ == '__main__':
     #1.Create a cerebro
     cerebro = bt.Cerebro()
 
     #2.Add data feed
     #2.1 Creat a data feed
-    dataframe = pd.read_csv('C:\\FXDATA\\data\\USDJPY_oo.csv',names=['datetime','open','high','low','close','Aopen','Ahigh','Alow','Aclose'])
-    dataframe=dataframe.drop(['Aopen','Ahigh','Alow','Aclose'],axis=1)
+    dataframe = pd.read_csv('C:\\FXDATA\\ALL\\USDJPY_test.csv',skiprows=10000*start_w,nrows=10000*nrow_w,names=['datetime','open','high','low','close'])
+#    dataframe = pd.read_csv('C:\\FXDATA\\data\\USDJPY_oo.csv',names=['datetime','open','high','low','close','Aopen','Ahigh','Alow','Aclose'])
+#    dataframe=dataframe.drop(['Aopen','Ahigh','Alow','Aclose'],axis=1)
     dataframe['datetime']=pd.to_datetime(dataframe['datetime'])
     dataframe.set_index('datetime',inplace=True)
     dataframe['openinterest']=0
@@ -75,15 +79,37 @@ def main():
     cerebro.adddata(brf_min)
     cerebro.resampledata(brf_min,timeframe=bt.TimeFrame.Days)
 
+    #2.3 Add Broker info
+    cerebro.broker.setcash(20000.0)
+    #Future Mode, commison is point
+    cerebro.broker.setcommission(commission=2.0,margin=2000,mult=10.0,name='brf')
+    #Stocks Mode, commision = x%
+    cerebro.broker.setcommission(commission=0.005)
+    #Set Slip
+    cerebro.broker.set_slippage_fixed(fixed=5)
+    #cerebro.broker.set_slippage_perc(prec=0.05)
+    #Filler setting
+    #cerebro.broker.set_filler(bt.broker.filler.FixedBarPerc(perc=0.1)
+    cerebro.broker.set_filler(bt.broker.filler.FixedSize(size=1))
+    #For Writer
+    cerebro.addobserver(bt.observers.TimeReturn)
+#    cerebro.addwriter(bt.WriterFile,csv=True,out="C://FXDATA//write.csv")
+
     #3. Add strategy
     cerebro.addstrategy(DualThrust)
 
     #4. Run
     cerebro.run()
 
+    #get broker(size / price)
+    pos = cerebro.broker.getposition(brf_min)
+    print("size:", pos.size)
+    print("price:", pos.price)
+
+    print("value:",cerebro.broker.get_value())
+    print("cash:",cerebro.broker.get_cash())
+
     #5. Plot
     cerebro.plot(style='candle')
 
-if __name__ == '__main__':
-    main()
-
+    #6.Writer

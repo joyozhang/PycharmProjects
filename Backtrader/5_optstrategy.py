@@ -1,8 +1,9 @@
-
 import backtrader as bt
 import datetime
 import pandas as pd
 
+start_w=500
+nrow_w=100
 #0.1 add indicator
 class DT_Line(bt.Indicator):
     lines=('U','D')
@@ -53,10 +54,12 @@ class DualThrust(bt.Strategy):
         if self.data.datetime.time() >= datetime.time(22,55):
             self.order = self.close()
     def stop(self):
-        print('period: %s, k_u: %s, k_d: %s, final_value: %.2f' %
-              (self.params.period, self.params.k_u, self.params.k_d, self.broker.getvalue()))
-#        print('period: %s, k_u: k_d:, final_value: %.2f' %
-#              (self.params.period, self.broker.getvalue()))
+        ar_file=open('C:\\FXDATA\\ar.csv','a')
+        print('DT,%.2f,%s,%s,%s,%s,%s' % (self.broker.getvalue(),start_w,nrow_w,self.params.period, self.params.k_u, self.params.k_d), file=ar_file)
+        ar_file.close()
+        if self.broker.getvalue()>=10100 or self.broker.getvalue()<=9900:
+            print('period: %s, k_u: %s, k_d: %s, final_value: %.2f' %
+                  (self.params.period, self.params.k_u, self.params.k_d, self.broker.getvalue()))
 
 def main():
     #1.Create a cerebro
@@ -64,15 +67,18 @@ def main():
 
     #2.Add data feed
     #2.1 Creat a data feed
-    dataframe = pd.read_csv('C:\\FXDATA\\data\\USDJPY_es.csv',names=['datetime','open','high','low','close','Aopen','Ahigh','Alow','Aclose'])
-    dataframe=dataframe.drop(['Aopen','Ahigh','Alow','Aclose'],axis=1)
+    #dataframe = pd.read_csv('C:\\FXDATA\\data\\USDJPY_EX.csv',names=['datetime','open','high','low','close','Aopen','Ahigh','Alow','Aclose'])
+    #dataframe=dataframe.drop(['Aopen','Ahigh','Alow','Aclose'],axis=1)
+    #dataframe = pd.read_csv('C:\\FXDATA\\ALL\\USDJPY_test.csv',skiprows=500*start_w,nrows=50*nrow_w,names=['datetime','open','high','low','close'])
+    dataframe = pd.read_csv('C:\\FXDATA\\ALL\\USDJPY_test.csv',skiprows=10000*start_w,nrows=10000*nrow_w,names=['datetime','open','high','low','close'])
     dataframe['datetime']=pd.to_datetime(dataframe['datetime'])
     dataframe.set_index('datetime',inplace=True)
     dataframe['openinterest']=0
     dataframe['volume']=1000
+    print(dataframe)
     brf_min=bt.feeds.PandasData(dataname=dataframe,
-                                fromdate=datetime.datetime(2016,2,1),
-                                todate=datetime.datetime(2018,6,30),
+                                #fromdate=datetime.datetime(2016,2,1),
+                                #todate=datetime.datetime(2018,6,30),
                                 timeframe=bt.TimeFrame.Minutes
                                 )
 
@@ -83,9 +89,9 @@ def main():
     #3. Add strategy
     cerebro.optstrategy(
         DualThrust,
-        period=range(1,5),
-        k_u=[n/10.0 for n in range(2,10)],
-        k_d=[n/10.0 for n in range(2,10)])
+        period=range(7,8),
+        k_u=[n/10.0 for n in range(6,9)],
+        k_d=[n/10.0 for n in range(6,9)])
 
     #4. Run
     cerebro.run()
